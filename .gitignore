@@ -1,0 +1,3 @@
+build-root/*.tar.*
+build-root/*.rpm
+build-root/rpmbuild
