@@ -33,19 +33,21 @@ echo %{name} > %{buildroot}/%{_sysconfdir}/modules-load.d/%{name}-modules.conf
 %{_sysconfdir}/modules-load.d/*
 
 %post
-
-if [ $1 -gt 1 ]; then
-	echo "Upgrading: module should already be present"
-else
-	dkms add -m %{name} -v %{version} --rpm_safe_upgrade
-	dkms build -m %{name} -v %{version} --rpm_safe_upgrade
-	dkms install -m %{name} -v %{version} --rpm_safe_upgrade
-fi
+for POSTINST in %{_prefix}/lib/dkms/common.postinst %{_datarootdir}/%{name}/postinst; do
+        if [ -f $POSTINST ]; then
+                $POSTINST %{name} %{version} %{_datarootdir}/%{name}
+                exit $?
+        fi
+        echo "WARNING: $POSTINST does not exist."
+done
+echo -e "ERROR: DKMS version is too old and %{name} was not"
+echo -e "built with legacy DKMS support."
+echo -e "You must either rebuild %{name} with legacy postinst"
+echo -e "support or upgrade DKMS to a more current version."
+exit 1
 
 %preun
-
-if [ $1 -gt 0 ]; then
-	echo "Upgrading: module should stay installed"
-else
-	dkms remove -m %{name} -v %{version} --all --rpm_safe_upgrade
-fi
+echo -e
+echo -e "Uninstall of %{name} module (version %{version}) beginning:"
+dkms remove -m %{name} -v %{version} --all --rpm_safe_upgrade
+exit 0
