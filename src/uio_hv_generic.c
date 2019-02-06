@@ -35,7 +35,7 @@
 
 #include "hyperv_vmbus.h"
 
-#define DRIVER_VERSION	"0.02.0"
+#define DRIVER_VERSION	"0.02.1"
 #define DRIVER_AUTHOR	"Stephen Hemminger <sthemmin at microsoft.com>"
 #define DRIVER_DESC	"Generic UIO driver for VMBus devices"
 
