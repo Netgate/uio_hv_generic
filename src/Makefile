@@ -12,6 +12,7 @@ obj-m		+= uio_hv_generic.o
 obj-m		+= hv_vmbus.o
 obj-m		+= hv_balloon.o
 obj-m		+= hyperv_fb.o
+obj-m		+= hid-hyperv.o
 
 hv_vmbus-y := vmbus_drv.o hv.o connection.o channel.o channel_mgmt.o \
 		ring_buffer.o hv_trace.o \
