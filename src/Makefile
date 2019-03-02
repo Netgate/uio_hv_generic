@@ -14,6 +14,7 @@ obj-m		+= hv_balloon.o
 obj-m		+= hyperv_fb.o
 obj-m		+= hid-hyperv.o
 obj-m		+= hyperv-keyboard.o
+obj-m		+= pci-hyperv.o
 obj-m		+= hv_storvsc.o
 obj-m		+= hv_netvsc.o
 
