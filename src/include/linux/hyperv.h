@@ -26,7 +26,6 @@
 #define _HYPERV_H
 
 #include "../uapi/linux/hyperv.h"
-#include <uapi/asm/hyperv.h>
 
 #include <linux/types.h>
 #include <linux/scatterlist.h>
@@ -1054,6 +1053,8 @@ extern int vmbus_establish_gpadl(struct vmbus_channel *channel,
 extern int vmbus_teardown_gpadl(struct vmbus_channel *channel,
 				     u32 gpadl_handle);
 
+void vmbus_reset_channel_cb(struct vmbus_channel *channel);
+
 extern int vmbus_recvpacket(struct vmbus_channel *channel,
 				  void *buffer,
 				  u32 bufferlen,
@@ -1151,8 +1152,8 @@ struct hv_ring_buffer_debug_info {
 	u32 bytes_avail_towrite;
 };
 
-void hv_ringbuffer_get_debuginfo(const struct hv_ring_buffer_info *ring_info,
-				 struct hv_ring_buffer_debug_info *debug_info);
+int hv_ringbuffer_get_debuginfo(const struct hv_ring_buffer_info *ring_info,
+				struct hv_ring_buffer_debug_info *debug_info);
 
 /* Vmbus interface */
 #define vmbus_driver_register(driver)	\

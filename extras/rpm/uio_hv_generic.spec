@@ -25,8 +25,14 @@ echo "Nothing to build..."
 
 %{__mkdir_p} %{buildroot}/%{_sysconfdir}/modules-load.d
 echo %{name} > %{buildroot}/%{_sysconfdir}/modules-load.d/%{name}-modules.conf
-%{__mkdir_p} %{buildroot}/usr/src/%{name}-%{version}
-%{__install} -m 0644 src/* %{buildroot}/usr/src/%{name}-%{version}/
+echo "hv_vmbus" >> %{buildroot}/%{_sysconfdir}/modules-load.d/%{name}-modules.conf
+%{__mkdir_p} %{buildroot}/usr/src/%{name}-%{version}/include/linux
+%{__mkdir_p} %{buildroot}/usr/src/%{name}-%{version}/include/asm
+%{__install} -m 0644 src/*.[ch] %{buildroot}/usr/src/%{name}-%{version}/
+%{__install} -m 0644 src/dkms.conf %{buildroot}/usr/src/%{name}-%{version}/
+%{__install} -m 0644 src/Makefile %{buildroot}/usr/src/%{name}-%{version}/
+%{__install} -m 0644 src/include/linux/*.h %{buildroot}/usr/src/%{name}-%{version}/include/linux
+%{__install} -m 0644 src/include/asm/*.h %{buildroot}/usr/src/%{name}-%{version}/include/asm
 
 %files
 /usr/src/*

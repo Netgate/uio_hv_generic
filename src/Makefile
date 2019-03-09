@@ -1,22 +1,24 @@
 #
 # module name and path
 #
-MODULE = uio_hv_generic
-MODULE_PATH = drivers/uio/uio_hv_generic
+MODULE_PATH = extra
 
 SRCDIR := $(CURDIR)
 VPATH += $(SRCDIR)
 
 KERNEL_DIR ?= /usr/lib/modules/$(KERNELRELEASE)/build
 
-obj-m		+= $(MODULE).o
+obj-m		+= uio_hv_generic.o
+obj-m		+= hv_vmbus.o
+
+hv_vmbus-y := vmbus_drv.o hv.o connection.o channel.o channel_mgmt.o \
+		ring_buffer.o hv_trace.o \
+		hv_init.o
 
 .PHONY: default
 default: build
 
-build module all: $(MODULE).ko
-
-$(MODULE).ko:
+build modules all:
 	$(MAKE) -C $(KERNEL_DIR) M=$(CURDIR) O=$(KERNEL_DIR)
 
 install:
