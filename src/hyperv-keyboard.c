@@ -437,6 +437,7 @@ static void __exit hv_kbd_exit(void)
 	vmbus_driver_unregister(&hv_kbd_drv);
 }
 
+MODULE_VERSION(TNSR_MODULE_VERSION);
 MODULE_LICENSE("GPL");
 module_init(hv_kbd_init);
 module_exit(hv_kbd_exit);

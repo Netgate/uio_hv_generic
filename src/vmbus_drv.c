@@ -2103,6 +2103,7 @@ static void __exit vmbus_exit(void)
 }
 
 
+MODULE_VERSION(TNSR_MODULE_VERSION);
 MODULE_LICENSE("GPL");
 
 subsys_initcall(hv_acpi_init);

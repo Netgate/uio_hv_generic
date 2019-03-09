@@ -577,5 +577,6 @@ static void exit_hyperv_utils(void)
 module_init(init_hyperv_utils);
 module_exit(exit_hyperv_utils);
 
+MODULE_VERSION(TNSR_MODULE_VERSION);
 MODULE_DESCRIPTION("Hyper-V Utilities");
 MODULE_LICENSE("GPL");

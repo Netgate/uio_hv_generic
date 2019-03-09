@@ -2230,6 +2230,7 @@ static int __init netvsc_drv_init(void)
 	return 0;
 }
 
+MODULE_VERSION(TNSR_MODULE_VERSION);
 MODULE_LICENSE("GPL");
 MODULE_DESCRIPTION("Microsoft Hyper-V network driver");
 

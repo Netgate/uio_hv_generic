@@ -1532,4 +1532,5 @@ hv_pkt_iter_next(struct vmbus_channel *channel,
 	for (pkt = hv_pkt_iter_first(channel); pkt; \
 	    pkt = hv_pkt_iter_next(channel, pkt))
 
+#define TNSR_MODULE_VERSION	"tnsr-19.02"
 #endif /* _HYPERV_H */

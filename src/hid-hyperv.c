@@ -610,6 +610,7 @@ static void __exit mousevsc_exit(void)
 	vmbus_driver_unregister(&mousevsc_drv);
 }
 
+MODULE_VERSION(TNSR_MODULE_VERSION);
 MODULE_LICENSE("GPL");
 module_init(mousevsc_init);
 module_exit(mousevsc_exit);

@@ -394,7 +394,7 @@ hyperv_module_exit(void)
 module_init(hyperv_module_init);
 module_exit(hyperv_module_exit);
 
-MODULE_VERSION(DRIVER_VERSION);
+MODULE_VERSION(TNSR_MODULE_VERSION);
 MODULE_LICENSE("GPL v2");
 MODULE_AUTHOR(DRIVER_AUTHOR);
 MODULE_DESCRIPTION(DRIVER_DESC);

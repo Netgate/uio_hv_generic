@@ -2587,5 +2587,6 @@ static int __init init_hv_pci_drv(void)
 module_init(init_hv_pci_drv);
 module_exit(exit_hv_pci_drv);
 
+MODULE_VERSION(TNSR_MODULE_VERSION);
 MODULE_DESCRIPTION("Hyper-V PCI");
 MODULE_LICENSE("GPL v2");

@@ -1997,6 +1997,7 @@ static void __exit storvsc_drv_exit(void)
 #endif
 }
 
+MODULE_VERSION(TNSR_MODULE_VERSION);
 MODULE_LICENSE("GPL");
 MODULE_DESCRIPTION("Microsoft Hyper-V virtual storage driver");
 module_init(storvsc_drv_init);
