@@ -15,7 +15,7 @@
 #include <linux/module.h>
 #include <linux/device.h>
 #include <linux/completion.h>
-#include <linux/hyperv.h>
+#include "include/linux/hyperv.h"
 #include <linux/serio.h>
 #include <linux/slab.h>
 

@@ -15,11 +15,13 @@ obj-m		+= hyperv_fb.o
 obj-m		+= hid-hyperv.o
 obj-m		+= hyperv-keyboard.o
 obj-m		+= hv_storvsc.o
+obj-m		+= hv_netvsc.o
 
 hv_vmbus-y := vmbus_drv.o hv.o connection.o channel.o channel_mgmt.o \
 		ring_buffer.o hv_trace.o \
 		hv_init.o
 hv_storvsc-y := storvsc_drv.o
+hv_netvsc-y := netvsc_drv.o netvsc.o rndis_filter.o netvsc_trace.o
 
 .PHONY: default
 default: build
