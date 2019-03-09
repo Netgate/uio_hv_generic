@@ -280,7 +280,7 @@ static const struct vmstor_protocol vmstor_protocols[] = {
 
 
 /*
- * This structure is sent during the initialization phase to get the different
+ * This structure is sent during the intialization phase to get the different
  * properties of the channel.
  */
 
@@ -446,6 +446,7 @@ struct storvsc_device {
 
 	bool	 destroy;
 	bool	 drain_notify;
+	bool	 open_sub_channel;
 	atomic_t num_outstanding_req;
 	struct Scsi_Host *host;
 
@@ -635,38 +636,33 @@ get_in_err:
 static void handle_sc_creation(struct vmbus_channel *new_sc)
 {
 	struct hv_device *device = new_sc->primary_channel->device_obj;
-	struct device *dev = &device->device;
 	struct storvsc_device *stor_device;
 	struct vmstorage_channel_properties props;
-	int ret;
 
 	stor_device = get_out_stor_device(device);
 	if (!stor_device)
 		return;
 
+	if (stor_device->open_sub_channel == false)
+		return;
+
 	memset(&props, 0, sizeof(struct vmstorage_channel_properties));
 
-	ret = vmbus_open(new_sc,
-			 storvsc_ringbuffer_size,
-			 storvsc_ringbuffer_size,
-			 (void *)&props,
-			 sizeof(struct vmstorage_channel_properties),
-			 storvsc_on_channel_callback, new_sc);
+	vmbus_open(new_sc,
+		   storvsc_ringbuffer_size,
+		   storvsc_ringbuffer_size,
+		   (void *)&props,
+		   sizeof(struct vmstorage_channel_properties),
+		   storvsc_on_channel_callback, new_sc);
 
-	/* In case vmbus_open() fails, we don't use the sub-channel. */
-	if (ret != 0) {
-		dev_err(dev, "Failed to open sub-channel: err=%d\n", ret);
-		return;
+	if (new_sc->state == CHANNEL_OPENED_STATE) {
+		stor_device->stor_chns[new_sc->target_cpu] = new_sc;
+		cpumask_set_cpu(new_sc->target_cpu, &stor_device->alloced_cpus);
 	}
-
-	/* Add the sub-channel to the array of available channels. */
-	stor_device->stor_chns[new_sc->target_cpu] = new_sc;
-	cpumask_set_cpu(new_sc->target_cpu, &stor_device->alloced_cpus);
 }
 
 static void  handle_multichannel_storage(struct hv_device *device, int max_chns)
 {
-	struct device *dev = &device->device;
 	struct storvsc_device *stor_device;
 	int num_cpus = num_online_cpus();
 	int num_sc;
@@ -683,11 +679,21 @@ static void  handle_multichannel_storage(struct hv_device *device, int max_chns)
 	request = &stor_device->init_request;
 	vstor_packet = &request->vstor_packet;
 
+	stor_device->open_sub_channel = true;
 	/*
 	 * Establish a handler for dealing with subchannels.
 	 */
 	vmbus_set_sc_create_callback(device->channel, handle_sc_creation);
 
+	/*
+	 * Check to see if sub-channels have already been created. This
+	 * can happen when this driver is re-loaded after unloading.
+	 */
+
+	if (vmbus_are_subchannels_present(device->channel))
+		return;
+
+	stor_device->open_sub_channel = false;
 	/*
 	 * Request the host to create sub-channels.
 	 */
@@ -704,29 +710,23 @@ static void  handle_multichannel_storage(struct hv_device *device, int max_chns)
 			       VM_PKT_DATA_INBAND,
 			       VMBUS_DATA_PACKET_FLAG_COMPLETION_REQUESTED);
 
-	if (ret != 0) {
-		dev_err(dev, "Failed to create sub-channel: err=%d\n", ret);
+	if (ret != 0)
 		return;
-	}
 
 	t = wait_for_completion_timeout(&request->wait_event, 10*HZ);
-	if (t == 0) {
-		dev_err(dev, "Failed to create sub-channel: timed out\n");
+	if (t == 0)
 		return;
-	}
 
 	if (vstor_packet->operation != VSTOR_OPERATION_COMPLETE_IO ||
-	    vstor_packet->status != 0) {
-		dev_err(dev, "Failed to create sub-channel: op=%d, sts=%d\n",
-			vstor_packet->operation, vstor_packet->status);
+	    vstor_packet->status != 0)
 		return;
-	}
 
 	/*
-	 * We need to do nothing here, because vmbus_process_offer()
-	 * invokes channel->sc_creation_callback, which will open and use
-	 * the sub-channel(s).
+	 * Now that we created the sub-channels, invoke the check; this
+	 * may trigger the callback.
 	 */
+	stor_device->open_sub_channel = true;
+	vmbus_are_subchannels_present(device->channel);
 }
 
 static void cache_wwn(struct storvsc_device *stor_device,
@@ -873,7 +873,7 @@ static int storvsc_channel_init(struct hv_device *device, bool is_fc)
 	 * We will however populate all the slots to evenly distribute
 	 * the load.
 	 */
-	stor_device->stor_chns = kcalloc(num_possible_cpus(), sizeof(void *),
+	stor_device->stor_chns = kzalloc(sizeof(void *) * num_possible_cpus(),
 					 GFP_KERNEL);
 	if (stor_device->stor_chns == NULL)
 		return -ENOMEM;
@@ -1429,7 +1429,6 @@ static int storvsc_device_configure(struct scsi_device *sdevice)
 	blk_queue_virt_boundary(sdevice->request_queue, PAGE_SIZE - 1);
 
 	sdevice->no_write_same = 1;
-
 	/*
 	 * If the host is WIN8 or WIN8 R2, claim conformance to SPC-3
 	 * if the device is a MSFT virtual device.  If the host is
@@ -1524,18 +1523,6 @@ static int storvsc_host_reset_handler(struct scsi_cmnd *scmnd)
 	return SUCCESS;
 }
 
-/* fc_eh_timed_out */
-static enum blk_eh_timer_return
-fc_eh_timed_out(struct scsi_cmnd *scmd)
-{
-	struct fc_rport *rport = starget_to_rport(scsi_target(scmd->device));
-
-	if (rport->port_state == FC_PORTSTATE_BLOCKED)
-		return BLK_EH_RESET_TIMER;
-
-	return BLK_EH_HANDLED;
-}
-
 /*
  * The host guarantees to respond to each command, although I/O latencies might
  * be unbounded on Azure.  Reset the timer unconditionally to give the host a
@@ -1543,11 +1530,6 @@ fc_eh_timed_out(struct scsi_cmnd *scmd)
  */
 static enum blk_eh_timer_return storvsc_eh_timed_out(struct scsi_cmnd *scmnd)
 {
-#if IS_ENABLED(CONFIG_SCSI_FC_ATTRS)
-	if (scmnd->device->host->transportt == fc_transport_template)
-		return fc_eh_timed_out(scmnd);
-#endif
-
 	return BLK_EH_RESET_TIMER;
 }
 
@@ -1664,9 +1646,9 @@ static int storvsc_queuecommand(struct Scsi_Host *host, struct scsi_cmnd *scmnd)
 	if (sg_count) {
 		if (sg_count > MAX_PAGE_BUFFER_COUNT) {
 
-			payload_sz = (sg_count * sizeof(u64) +
+			payload_sz = (sg_count * sizeof(void *) +
 				      sizeof(struct vmbus_packet_mpb_array));
-			payload = kzalloc(payload_sz, GFP_ATOMIC);
+			payload = kmalloc(payload_sz, GFP_ATOMIC);
 			if (!payload)
 				return SCSI_MLQUEUE_DEVICE_BUSY;
 		}
@@ -1807,6 +1789,7 @@ static int storvsc_probe(struct hv_device *device,
 	}
 
 	stor_device->destroy = false;
+	stor_device->open_sub_channel = false;
 	init_waitqueue_head(&stor_device->waiting_to_drain);
 	stor_device->device = device;
 	stor_device->host = host;
