@@ -275,7 +275,7 @@ hv_uio_probe(struct hv_device *dev,
 		= (uintptr_t)virt_to_phys(ring_buffer);
 	pdata->info.mem[TXRX_RING_MAP].size
 		= channel->ringbuffer_pagecount << PAGE_SHIFT;
-	pdata->info.mem[TXRX_RING_MAP].memtype = UIO_MEM_LOGICAL;
+	pdata->info.mem[TXRX_RING_MAP].memtype = UIO_MEM_PHYS;
 
 	pdata->info.mem[INT_PAGE_MAP].name = "int_page";
 	pdata->info.mem[INT_PAGE_MAP].addr
