@@ -1,3 +1,6 @@
+# Disable debuginfo since this package only install sources
+%define debug_package %{nil}
+
 %{!?_topdir: %define _topdir %(pwd)}
 
 Name: uio_hv_generic
