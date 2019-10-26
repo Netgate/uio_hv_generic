@@ -10,7 +10,7 @@ all: RPM
 spec:
 	@echo $(TARBALL)
 	mkdir -p $(RPMBUILD)/{RPMS,SRPMS,BUILD,SOURCES,SPECS}
-	cp $(TARBALL) $(RPMBUILD)/SOURCES/$(BASENAME).tar.xz
+	cp $(TARBALL) $(RPMBUILD)/SOURCES/uio_hv_generic-$(VERSION)-$(RELEASE).tar.xz
 	cp uio_hv_generic.spec $(RPMBUILD)/SPECS
 
 srpm: spec
